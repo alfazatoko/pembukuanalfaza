@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
     <meta name="theme-color" content="#2b67f6">
     <link rel="manifest" href="manifest.json">
     <title>Alfaza Cell - Pro</title>
@@ -12,8 +12,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #eef2f9; padding-bottom: 70px; }
-        .container { max-width: 450px; margin: 0 auto; padding: 10px; }
+        
+        /* Mode Tampilan */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #eef2f9;
+            transition: all 0.3s;
+        }
+        body.mode-phone { max-width: 450px; margin: 0 auto; background: #eef2f9; }
+        body.mode-tablet { max-width: 768px; margin: 0 auto; background: #eef2f9; }
+        body.mode-pc { max-width: 1200px; margin: 0 auto; background: #eef2f9; }
+        
+        /* Mode Switch */
+        .mode-switch {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 5px;
+        }
+        .mode-btn {
+            background: #f0f2f8;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .mode-btn.active {
+            background: #2b67f6;
+            color: white;
+        }
+        
+        .container { padding: 10px; }
         
         /* Login */
         #login-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(145deg, #1a4fc4, #2b67f6); z-index: 9999; display: flex; align-items: center; justify-content: center; }
@@ -23,9 +59,8 @@
         .btn-login { background: #2b67f6; color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
         /* Header */
-        .header { background: white; padding: 12px; display: flex; justify-content: space-between; border-radius: 0 0 20px 20px; margin-bottom: 10px; }
-        .header-left { font-size: 10px; }
-        .header-center { text-align: center; }
+        .header { background: white; padding: 12px; display: flex; justify-content: space-between; border-radius: 0 0 20px 20px; margin-bottom: 10px; flex-wrap: wrap; }
+        .header-left, .header-center, .header-right { font-size: 10px; }
         .shop-name { font-weight: bold; font-size: 16px; }
         .shop-date { font-size: 10px; color: gray; }
         
@@ -36,7 +71,7 @@
         .saldo-card p { font-size: 18px; font-weight: bold; margin-top: 5px; }
         
         /* Stats */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
         .stat-card { background: white; padding: 10px; border-radius: 14px; text-align: center; }
         .stat-card i { font-size: 18px; }
         .stat-card b { font-size: 14px; display: block; margin-top: 3px; }
@@ -51,12 +86,12 @@
         /* Form */
         .form-card { background: white; padding: 15px; border-radius: 18px; }
         .input-group { display: flex; align-items: center; background: #f8f9ff; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eef2ff; }
-        .input-group i { margin-right: 10px; color: #2b67f6; }
+        .input-group i { margin-right: 10px; color: #2b67f6; width: 20px; }
         .input-group input { border: none; background: transparent; width: 100%; outline: none; font-size: 14px; }
         .btn-save { background: #2b67f6; color: white; border: none; width: 100%; padding: 14px; border-radius: 14px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         
         /* Navbar */
-        .navbar { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 8px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .navbar { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 8px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; }
         .nav-item { text-align: center; background: none; border: none; cursor: pointer; font-size: 10px; color: #f39c12; }
         .nav-item i { font-size: 20px; display: block; margin-bottom: 2px; color: #f39c12; }
         .nav-item.active i, .nav-item.active span { color: #2b67f6; }
@@ -68,21 +103,21 @@
         .page.active { display: block; }
         
         /* History */
-        .date-range-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .date-range-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         .date-range-row input { flex: 1; padding: 8px; border-radius: 10px; border: 1px solid #ddd; }
         .date-range-row button { background: #2b67f6; color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; }
         .filter-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
         .filter-btn { background: white; padding: 5px 12px; border-radius: 20px; font-size: 10px; cursor: pointer; border: 1px solid #ddd; }
         .filter-btn.active { background: #2b67f6; color: white; border: none; }
         .history-table { width: 100%; background: white; border-collapse: collapse; font-size: 11px; display: block; overflow-x: auto; }
-        .history-table th, .history-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .history-table th, .history-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
         
         /* Report */
-        .report-card { background: white; border-radius: 18px; padding: 15px; margin-bottom: 10px; }
-        .report-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-        .report-total-section { background: #2b67f6; color: white; margin: 15px -15px -15px; padding: 15px; border-radius: 0 0 18px 18px; }
-        .action-buttons { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .action-btn { flex: 1; padding: 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
+        .report-card { background: white; border-radius: 18px; padding: 12px; margin-bottom: 10px; font-size: 11px; }
+        .report-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 11px; }
+        .report-total-section { background: #2b67f6; color: white; margin: 12px -12px -12px; padding: 12px; border-radius: 0 0 18px 18px; font-size: 12px; }
+        .action-buttons { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+        .action-btn { flex: 1; padding: 8px 4px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; text-align: center; font-size: 10px; }
         .btn-orange { background: #f39c12; }
         .btn-green { background: #25d366; }
         .btn-blue { background: #2b67f6; }
@@ -101,6 +136,7 @@
         /* Toast */
         #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; opacity: 0; transition: opacity 0.3s; z-index: 10000; }
         
+        /* Badge */
         .kasir-badge { background: #2b67f6; color: white; padding: 2px 6px; border-radius: 10px; font-size: 9px; margin-left: 5px; }
         .kasir-selector { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         .kasir-option { flex: 1; text-align: center; padding: 8px; background: #f8f9ff; border-radius: 12px; cursor: pointer; font-size: 11px; }
@@ -109,577 +145,735 @@
         .backup-bar { background: #2c3e50; color: white; padding: 6px; border-radius: 12px; font-size: 9px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .backup-btn { background: #f39c12; border: none; border-radius: 8px; padding: 4px 10px; color: white; font-size: 10px; cursor: pointer; }
         .empty-state { text-align: center; padding: 20px; color: gray; }
-        .closed-badge { background: #f39c12; color: white; font-size: 8px; padding: 2px 5px; border-radius: 4px; }
         .action-btn-icon { background: none; border: none; cursor: pointer; margin: 0 2px; }
         .edit-btn { color: #2b67f6; }
         .delete-btn { color: #e74c3c; }
         .sync-status { font-size: 8px; color: #27ae60; margin-left: 5px; }
-        .btn-small { background: #f39c12; border: none; border-radius: 6px; padding: 4px 8px; color: white; font-size: 9px; cursor: pointer; margin-left: 5px; }
+        .btn-small { background: #f39c12; border: none; border-radius: 6px; padding: 4px 8px; color: white; font-size: 9px; cursor: pointer; }
+        .history-saldo-section { margin-top: 20px; }
+        .history-saldo-table { width: 100%; background: white; border-collapse: collapse; font-size: 11px; display: block; overflow-x: auto; margin-top: 5px; }
+        
+        /* Chart */
+        .chart-container { background: white; border-radius: 18px; padding: 12px; margin-bottom: 12px; }
+        .chart-title { font-size: 12px; font-weight: bold; color: #2b67f6; margin-bottom: 10px; text-align: center; }
+        .chart-canvas { max-height: 200px; width: 100%; }
+        .chart-selector { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
+        .chart-type-btn { background: #f0f2f8; border: none; padding: 6px 12px; border-radius: 20px; font-size: 10px; cursor: pointer; }
+        .chart-type-btn.active { background: #2b67f6; color: white; }
     </style>
 </head>
 <body>
-
-<!-- HALAMAN LOGIN -->
-<div id="login-page">
-    <div class="login-box">
-        <h2>ALFAZA CELL</h2>
-        <p>Sistem Kasir Pro</p>
-        <select id="user-select">
-            <option value="KASIR 01">KASIR 01</option>
-            <option value="KASIR 02">KASIR 02</option>
-            <option value="KASIR 03">KASIR 03</option>
-            <option value="OWNER">OWNER</option>
-        </select>
-        <input type="password" id="user-pin" placeholder="PIN">
-        <button class="btn-login" onclick="login()">MASUK</button>
+    <!-- Mode Switch -->
+    <div class="mode-switch">
+        <button class="mode-btn active" onclick="setMode('phone')">📱 HP</button>
+        <button class="mode-btn" onclick="setMode('tablet')">📟 Tablet</button>
+        <button class="mode-btn" onclick="setMode('pc')">💻 PC</button>
     </div>
-</div>
 
-<!-- APLIKASI UTAMA -->
-<div id="main-app" style="display:none">
-    <div class="header">
-        <div class="header-left">Kasir: <b id="disp-user">-</b><br>Shift: <b id="disp-shift">-</b><span id="sync-status" class="sync-status"></span></div>
-        <div class="header-center"><span class="shop-name">ALFAZA CELL</span><br><span class="shop-date" id="disp-date">-</span></div>
-        <div class="header-left">Login: <b id="disp-login">--:--</b><br><span id="disp-time">00:00</span></div>
+    <!-- HALAMAN LOGIN -->
+    <div id="login-page">
+        <div class="login-box">
+            <h2>ALFAZA CELL</h2>
+            <p>Sistem Kasir Pro</p>
+            <select id="user-select">
+                <option value="KASIR 01">KASIR 01</option>
+                <option value="KASIR 02">KASIR 02</option>
+                <option value="KASIR 03">KASIR 03</option>
+                <option value="OWNER">OWNER</option>
+            </select>
+            <input type="password" id="user-pin" placeholder="PIN" inputmode="numeric">
+            <button class="btn-login" onclick="login()">MASUK</button>
+        </div>
     </div>
+
+    <!-- APLIKASI UTAMA -->
+    <div id="main-app" style="display:none">
+        <div class="header">
+            <div class="header-left">Kasir: <b id="disp-user">-</b><br>Shift: <b id="disp-shift">-</b><span id="sync-status" class="sync-status"></span></div>
+            <div class="header-center"><span class="shop-name">ALFAZA CELL</span><br><span class="shop-date" id="disp-date">-</span></div>
+            <div class="header-right">Login: <b id="disp-login">--:--</b><br><span id="disp-time">00:00</span></div>
+        </div>
+        
+        <div class="container">
+            <!-- Owner Mode -->
+            <div id="owner-mode" style="display:none;">
+                <div class="owner-header"><i class="fa-solid fa-crown"></i> MODE OWNER - Pilih Kasir</div>
+                <div class="kasir-selector" id="kasir-selector">
+                    <div class="kasir-option" onclick="pilihKasir('KASIR 01', this)">KASIR 01</div>
+                    <div class="kasir-option" onclick="pilihKasir('KASIR 02', this)">KASIR 02</div>
+                    <div class="kasir-option" onclick="pilihKasir('KASIR 03', this)">KASIR 03</div>
+                </div>
+                <div class="backup-bar"><span><i class="fa-solid fa-cloud"></i> Backup Otomatis Setiap Jam</span><button class="backup-btn" onclick="backupAllKasir()"><i class="fa-solid fa-database"></i> Backup Semua</button></div>
+            </div>
+            
+            <!-- Halaman Beranda -->
+            <div id="page-home" class="page active">
+                <div class="saldo-grid">
+                    <div class="saldo-card"><i class="fa-solid fa-university"></i> Saldo Bank<p id="saldo-bank">Rp 0</p></div>
+                    <div class="saldo-card green"><i class="fa-solid fa-money-bill"></i> Saldo Cash<p id="saldo-cash">Rp 0</p></div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><i class="fa-solid fa-arrow-up" style="color:#e74c3c"></i><span>Tarik</span><b id="stat-tarik">0</b></div>
+                    <div class="stat-card"><i class="fa-solid fa-headset" style="color:#5d9cec"></i><span>Aksesoris</span><b id="stat-aks">0</b></div>
+                    <div class="stat-card"><i class="fa-solid fa-coins" style="color:#f39c12"></i><span>Admin</span><b id="stat-admin">0</b></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <button class="btn-small" onclick="bukaTambahSaldo()"><i class="fa-solid fa-plus-circle"></i> +Saldo</button>
+                    <button class="btn-small" onclick="backupKasirSekarang()"><i class="fa-solid fa-cloud-arrow-up"></i> Backup</button>
+                </div>
+                <div class="category-grid">
+                    <div class="category-btn active" onclick="pilihKategori('BANK', this)"><i class="fa-solid fa-building-columns"></i><span>Bank</span></div>
+                    <div class="category-btn" onclick="pilihKategori('FLIP', this)"><i class="fa-solid fa-shuffle"></i><span>Flip</span></div>
+                    <div class="category-btn" onclick="pilihKategori('APP PULSA', this)"><i class="fa-solid fa-mobile"></i><span>App</span></div>
+                    <div class="category-btn" onclick="pilihKategori('DANA', this)"><i class="fa-solid fa-wallet"></i><span>Dana</span></div>
+                    <div class="category-btn" onclick="pilihKategori('TARIK TUNAI', this)"><i class="fa-solid fa-hand-holding-dollar"></i><span>Tarik</span></div>
+                    <div class="category-btn" onclick="pilihKategori('AKSESORIS', this)"><i class="fa-solid fa-headset"></i><span>Aks</span></div>
+                </div>
+                <div class="form-card">
+                    <div class="input-group"><i class="fa-solid fa-money-bill"></i><input type="text" id="input-nominal" placeholder="Nominal" onkeyup="formatRupiah(this)" inputmode="numeric"></div>
+                    <div class="input-group"><i class="fa-solid fa-percent"></i><input type="text" id="input-admin" placeholder="Admin" onkeyup="formatRupiah(this)" inputmode="numeric"></div>
+                    <div class="input-group"><i class="fa-solid fa-pen"></i><input type="text" id="input-ket" placeholder="Keterangan"></div>
+                    <button class="btn-save" onclick="simpanTransaksi()"><i class="fa-solid fa-save"></i> SIMPAN TRANSAKSI</button>
+                </div>
+            </div>
+            
+            <!-- Halaman Riwayat -->
+            <div id="page-history" class="page">
+                <div class="date-range-row">
+                    <input type="date" id="tgl-awal">
+                    <input type="date" id="tgl-akhir">
+                    <button onclick="filterRiwayat()"><i class="fa-solid fa-search"></i> Cari</button>
+                </div>
+                <div class="filter-grid" id="filter-transaksi">
+                    <div class="filter-btn active" onclick="filterKategori('all', this)">Semua</div>
+                    <div class="filter-btn" onclick="filterKategori('BANK', this)">Bank</div>
+                    <div class="filter-btn" onclick="filterKategori('FLIP', this)">Flip</div>
+                    <div class="filter-btn" onclick="filterKategori('APP PULSA', this)">App</div>
+                    <div class="filter-btn" onclick="filterKategori('DANA', this)">Dana</div>
+                    <div class="filter-btn" onclick="filterKategori('TARIK TUNAI', this)">Tarik</div>
+                    <div class="filter-btn" onclick="filterKategori('AKSESORIS', this)">Aks</div>
+                </div>
+                <div style="background:white; border-radius:12px; overflow-x:auto; margin-bottom:15px;">
+                    <table class="history-table">
+                        <thead> <th>#</th><th>Jam</th><th>Tipe</th><th>Nominal</th><th>Admin</th><th>Ket</th><th>Aksi</th> </thead>
+                        <tbody id="history-list"></tbody>
+                    </table>
+                </div>
+                
+                <!-- RIWAYAT TAMBAH SALDO -->
+                <div class="history-saldo-section">
+                    <div style="background:#2c3e50; color:white; padding:8px; border-radius:10px 10px 0 0;"><i class="fa-solid fa-circle-plus"></i> RIWAYAT TAMBAH SALDO</div>
+                    <div class="filter-grid" style="margin-top:8px;" id="filter-saldo">
+                        <div class="filter-btn active" onclick="filterSaldo('all', this)">Semua</div>
+                        <div class="filter-btn" onclick="filterSaldo('Bank', this)">🏦 Bank</div>
+                        <div class="filter-btn" onclick="filterSaldo('Cash', this)">💵 Cash</div>
+                        <div class="filter-btn" onclick="filterSaldo('Saldo Real App', this)">📊 Saldo Real</div>
+                    </div>
+                    <div style="background:white; border-radius:0 0 12px 12px; overflow-x:auto;">
+                        <table class="history-saldo-table">
+                            <thead> <th>#</th><th>Jam</th><th>Jenis</th><th>Nominal</th><th>Ket</th> </thead>
+                            <tbody id="history-saldo-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Halaman Laporan -->
+            <div id="page-report" class="page">
+                <div class="date-range-row">
+                    <input type="date" id="tgl-laporan">
+                    <button onclick="tampilkanLaporan()"><i class="fa-solid fa-chart-bar"></i> Tampilkan</button>
+                </div>
+                <div id="laporan-area"></div>
+            </div>
+            
+            <!-- Halaman Grafik (KHUSUS OWNER) -->
+            <div id="page-grafik" class="page">
+                <div class="chart-selector">
+                    <button class="chart-type-btn active" onclick="pilihTipeGrafik('harian', this)">📊 Harian</button>
+                    <button class="chart-type-btn" onclick="pilihTipeGrafik('kategori', this)">🥧 Per Kategori</button>
+                    <button class="chart-type-btn" onclick="pilihTipeGrafik('kasir', this)">👥 Per Kasir</button>
+                </div>
+                <div class="date-range-row">
+                    <input type="date" id="graf-tgl-awal">
+                    <span>sd</span>
+                    <input type="date" id="graf-tgl-akhir">
+                    <button onclick="refreshGrafik()"><i class="fa-solid fa-chart-line"></i> Tampilkan</button>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title" id="chart-title">Grafik Penjualan Harian</div>
+                    <canvas id="penjualanChart" class="chart-canvas"></canvas>
+                </div>
+                <div id="grafik-summary" style="background:white; border-radius:16px; padding:12px; margin-top:8px;">
+                    <div style="font-size:10px; color:#888; text-align:center;">Total penjualan periode terpilih</div>
+                    <div style="font-size:18px; font-weight:800; color:#2b67f6; text-align:center;" id="grafik-total">Rp 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navbar -->
+        <div class="navbar">
+            <button class="nav-item active" onclick="gantiPage('home', this)"><i class="fa-solid fa-home"></i><span>Beranda</span></button>
+            <button class="nav-item" onclick="gantiPage('history', this)"><i class="fa-solid fa-clock"></i><span>Riwayat</span></button>
+            <button class="nav-item" id="btn-tambah-saldo" onclick="bukaTambahSaldo()" style="display:none;"><i class="fa-solid fa-plus-circle"></i><span>+Saldo</span></button>
+            <button class="nav-item" onclick="gantiPage('report', this)"><i class="fa-solid fa-chart-pie"></i><span>Laporan</span></button>
+            <button class="nav-item" id="btn-grafik" onclick="gantiPage('grafik', this)" style="display:none;"><i class="fa-solid fa-chart-line"></i><span>Grafik</span></button>
+            <button class="nav-item logout-btn" onclick="logout()"><i class="fa-solid fa-sign-out-alt"></i><span>Keluar</span></button>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Saldo -->
+    <div id="modal-saldo" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Tambah Saldo</div>
+            <select id="saldo-jenis" style="width:100%; padding:10px; margin:10px 0; border-radius:10px;">
+                <option value="Bank">🏦 Bank</option>
+                <option value="Cash">💵 Cash</option>
+            </select>
+            <input type="text" id="saldo-nominal" class="modal-input" placeholder="Nominal" inputmode="numeric" onkeyup="formatRupiah(this)">
+            <div class="modal-button-group">
+                <button class="modal-button red" onclick="tutupModalSaldo()">Batal</button>
+                <button class="modal-button green" onclick="prosesTambahSaldo()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Saldo Real -->
+    <div id="modal-saldo-real" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">📊 Saldo Real App</div>
+            <input type="text" id="saldo-real-nominal" class="modal-input" placeholder="Nominal" inputmode="numeric" onkeyup="formatRupiah(this)">
+            <input type="text" id="saldo-real-ket" class="modal-input" placeholder="Keterangan">
+            <div class="modal-button-group">
+                <button class="modal-button red" onclick="tutupModalSaldoReal()">Batal</button>
+                <button class="modal-button green" onclick="simpanSaldoReal()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Transaksi -->
+    <div id="modal-edit" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Edit Transaksi</div>
+            <input type="text" id="edit-nominal" class="modal-input" placeholder="Nominal" inputmode="numeric" onkeyup="formatRupiah(this)">
+            <input type="text" id="edit-admin" class="modal-input" placeholder="Admin" inputmode="numeric" onkeyup="formatRupiah(this)">
+            <input type="text" id="edit-keterangan" class="modal-input" placeholder="Keterangan">
+            <div class="modal-button-group">
+                <button class="modal-button red" onclick="tutupModalEdit()">Batal</button>
+                <button class="modal-button green" onclick="simpanEdit()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">💾 Tersimpan</div>
+
+    <script>
+    // ==================== KONFIGURASI ====================
+    // GANTI DENGAN URL APPS SCRIPT ANDA
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTN9TQ57Kq3lvnDOA80A_GyNPzKQY2Zpw1HtcjAbJ_QyZf6ak9j7icSadum1T8XYZi/exec";
     
-    <div class="container">
-        <!-- Owner Mode -->
-        <div id="owner-mode" style="display:none;">
-            <div class="owner-header"><i class="fa-solid fa-crown"></i> MODE OWNER - Pilih Kasir</div>
-            <div class="kasir-selector" id="kasir-selector">
-                <div class="kasir-option" onclick="pilihKasir('KASIR 01', this)">KASIR 01</div>
-                <div class="kasir-option" onclick="pilihKasir('KASIR 02', this)">KASIR 02</div>
-                <div class="kasir-option" onclick="pilihKasir('KASIR 03', this)">KASIR 03</div>
-            </div>
-            <div class="backup-bar"><span><i class="fa-solid fa-cloud"></i> Backup Otomatis Setiap Jam</span><button class="backup-btn" onclick="backupAllKasir()"><i class="fa-solid fa-database"></i> Backup Semua</button></div>
-        </div>
-        
-        <!-- Halaman Beranda -->
-        <div id="page-home" class="page active">
-            <div class="saldo-grid">
-                <div class="saldo-card"><i class="fa-solid fa-university"></i> Saldo Bank<p id="saldo-bank">Rp 0</p></div>
-                <div class="saldo-card green"><i class="fa-solid fa-money-bill"></i> Saldo Cash<p id="saldo-cash">Rp 0</p></div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card"><i class="fa-solid fa-arrow-up" style="color:#e74c3c"></i><span>Tarik</span><b id="stat-tarik">0</b></div>
-                <div class="stat-card"><i class="fa-solid fa-headset" style="color:#5d9cec"></i><span>Aksesoris</span><b id="stat-aks">0</b></div>
-                <div class="stat-card"><i class="fa-solid fa-coins" style="color:#f39c12"></i><span>Admin</span><b id="stat-admin">0</b></div>
-            </div>
-            <!-- Tombol Backup untuk Kasir -->
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                <button class="btn-small" onclick="backupKasirSekarang()"><i class="fa-solid fa-cloud-arrow-up"></i> Backup Sekarang</button>
-            </div>
-            <div class="category-grid">
-                <div class="category-btn active" onclick="pilihKategori('BANK', this)"><i class="fa-solid fa-building-columns"></i><span>Bank</span></div>
-                <div class="category-btn" onclick="pilihKategori('FLIP', this)"><i class="fa-solid fa-shuffle"></i><span>Flip</span></div>
-                <div class="category-btn" onclick="pilihKategori('APP PULSA', this)"><i class="fa-solid fa-mobile"></i><span>App</span></div>
-                <div class="category-btn" onclick="pilihKategori('DANA', this)"><i class="fa-solid fa-wallet"></i><span>Dana</span></div>
-                <div class="category-btn" onclick="pilihKategori('TARIK TUNAI', this)"><i class="fa-solid fa-hand-holding-dollar"></i><span>Tarik</span></div>
-                <div class="category-btn" onclick="pilihKategori('AKSESORIS', this)"><i class="fa-solid fa-headset"></i><span>Aks</span></div>
-            </div>
-            <div class="form-card">
-                <div class="input-group"><i class="fa-solid fa-money-bill"></i><input type="text" id="input-nominal" placeholder="Nominal" onkeyup="formatRupiah(this)"></div>
-                <div class="input-group"><i class="fa-solid fa-percent"></i><input type="text" id="input-admin" placeholder="Admin" onkeyup="formatRupiah(this)"></div>
-                <div class="input-group"><i class="fa-solid fa-pen"></i><input type="text" id="input-ket" placeholder="Keterangan"></div>
-                <button class="btn-save" onclick="simpanTransaksi()"><i class="fa-solid fa-save"></i> SIMPAN TRANSAKSI</button>
-            </div>
-        </div>
-        
-        <!-- Halaman Riwayat -->
-        <div id="page-history" class="page">
-            <div class="date-range-row">
-                <input type="date" id="tgl-awal">
-                <input type="date" id="tgl-akhir">
-                <button onclick="filterRiwayat()"><i class="fa-solid fa-search"></i></button>
-            </div>
-            <div class="filter-grid" id="filter-transaksi">
-                <div class="filter-btn active" onclick="filterKategori('all', this)">Semua</div>
-                <div class="filter-btn" onclick="filterKategori('BANK', this)">Bank</div>
-                <div class="filter-btn" onclick="filterKategori('FLIP', this)">Flip</div>
-                <div class="filter-btn" onclick="filterKategori('APP PULSA', this)">App</div>
-                <div class="filter-btn" onclick="filterKategori('DANA', this)">Dana</div>
-                <div class="filter-btn" onclick="filterKategori('TARIK TUNAI', this)">Tarik</div>
-                <div class="filter-btn" onclick="filterKategori('AKSESORIS', this)">Aks</div>
-            </div>
-            <div style="background:white; border-radius:12px; overflow-x:auto;">
-                <table class="history-table">
-                    <thead> <th>#</th><th>Jam</th><th>Tipe</th><th>Nominal</th><th>Admin</th><th>Ket</th><th>Aksi</th> </thead>
-                    <tbody id="history-list"></tbody>
-                 </table>
-            </div>
-        </div>
-        
-        <!-- Halaman Laporan -->
-        <div id="page-report" class="page">
-            <div class="date-range-row">
-                <input type="date" id="tgl-laporan">
-                <button onclick="tampilkanLaporan()"><i class="fa-solid fa-chart-bar"></i> Tampilkan</button>
-            </div>
-            <div id="laporan-area"></div>
-        </div>
-    </div>
+    const PIN_KASIR = { "KASIR 01": "1212", "KASIR 02": "2323", "KASIR 03": "3434", "OWNER": "9999" };
+    const KASIR_LIST = ["KASIR 01", "KASIR 02", "KASIR 03"];
     
-    <!-- Navbar -->
-    <div class="navbar">
-        <button class="nav-item active" onclick="gantiPage('home', this)"><i class="fa-solid fa-home"></i><span>Beranda</span></button>
-        <button class="nav-item" onclick="gantiPage('history', this)"><i class="fa-solid fa-clock"></i><span>Riwayat</span></button>
-        <button class="nav-item" id="btn-tambah-saldo" onclick="bukaTambahSaldo()"><i class="fa-solid fa-plus-circle"></i><span>+Saldo</span></button>
-        <button class="nav-item" onclick="gantiPage('report', this)"><i class="fa-solid fa-chart-pie"></i><span>Laporan</span></button>
-        <button class="nav-item logout-btn" onclick="logout()"><i class="fa-solid fa-sign-out-alt"></i><span>Keluar</span></button>
-    </div>
-</div>
-
-<!-- Modal Tambah Saldo -->
-<div id="modal-saldo" class="modal">
-    <div class="modal-content">
-        <div class="modal-title">Tambah Saldo</div>
-        <select id="saldo-jenis" style="width:100%; padding:10px; margin:10px 0; border-radius:10px;">
-            <option value="Bank">Bank</option>
-            <option value="Cash">Cash</option>
-        </select>
-        <input type="text" id="saldo-nominal" class="modal-input" placeholder="Nominal">
-        <div class="modal-button-group">
-            <button class="modal-button red" onclick="tutupModalSaldo()">Batal</button>
-            <button class="modal-button green" onclick="prosesTambahSaldo()">Simpan</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Saldo Real -->
-<div id="modal-saldo-real" class="modal">
-    <div class="modal-content">
-        <div class="modal-title">Saldo Real App</div>
-        <input type="text" id="saldo-real-nominal" class="modal-input" placeholder="Nominal">
-        <input type="text" id="saldo-real-ket" class="modal-input" placeholder="Keterangan">
-        <div class="modal-button-group">
-            <button class="modal-button red" onclick="tutupModalSaldoReal()">Batal</button>
-            <button class="modal-button green" onclick="simpanSaldoReal()">Simpan</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Edit Transaksi -->
-<div id="modal-edit" class="modal">
-    <div class="modal-content">
-        <div class="modal-title">Edit Transaksi</div>
-        <input type="text" id="edit-nominal" class="modal-input" placeholder="Nominal">
-        <input type="text" id="edit-admin" class="modal-input" placeholder="Admin">
-        <input type="text" id="edit-keterangan" class="modal-input" placeholder="Keterangan">
-        <div class="modal-button-group">
-            <button class="modal-button red" onclick="tutupModalEdit()">Batal</button>
-            <button class="modal-button green" onclick="simpanEdit()">Simpan</button>
-        </div>
-    </div>
-</div>
-
-<div id="toast">💾 Tersimpan</div>
-
-<script>
-// ==================== KONFIGURASI ====================
-// GANTI DENGAN URL APPS SCRIPT ANDA
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6ysOoqhk0nUJG9FLIpWAfLalx8JbrYDDzZ2ZZGZaPRP3LVR21pXCmpourR9nZVIxL/exec";
-
-const PIN_KASIR = { "KASIR 01": "1212", "KASIR 02": "2323", "KASIR 03": "3434", "OWNER": "9999" };
-const KASIR_LIST = ["KASIR 01", "KASIR 02", "KASIR 03"];
-
-let db = JSON.parse(localStorage.getItem('alfaza_cell')) || {};
-KASIR_LIST.forEach(k => { if (!db[k]) db[k] = { bank:0, cash:0, tarik:0, aks:0, admin:0, tr:[], ts:[], lastBackup: null }; });
-if (!db.OWNER) db.OWNER = { bank:0, cash:0, tarik:0, aks:0, admin:0, tr:[], ts:[], lastBackup: null };
-
-let user = "", viewKasir = null, dataUser = null, role = "";
-let kategoriAktif = "BANK";
-let editId = null;
-let backupInterval = null;
-
-// ==================== UTILITY ====================
-function formatRupiah(el) { let v = el.value.replace(/\D/g,''); el.value = v ? new Intl.NumberFormat('id-ID').format(v) : ''; }
-function toNumber(v) { return parseInt(v.toString().replace(/\D/g,'')) || 0; }
-function formatAngka(v) { return new Intl.NumberFormat('id-ID').format(v); }
-function idRandom() { return Date.now() + '-' + Math.random().toString(36).substr(2,6); }
-function toast(msg, isError = false) { 
-    let t = document.getElementById('toast'); 
-    t.innerText = msg; 
-    t.style.backgroundColor = isError ? '#e74c3c' : '#2b67f6';
-    t.style.opacity = '1'; 
-    setTimeout(() => t.style.opacity = '0', 2000); 
-}
-
-function updateSyncStatus() {
-    let status = document.getElementById('sync-status');
-    if (status && dataUser && dataUser.lastBackup) {
-        let last = new Date(dataUser.lastBackup);
-        let now = new Date();
-        let diff = Math.floor((now - last) / 60000);
-        if (diff < 60) {
-            status.innerHTML = ` ✓ ${diff} mnt lalu`;
-            status.style.color = '#27ae60';
-        } else {
-            status.innerHTML = ` ⚠ ${diff} mnt lalu`;
-            status.style.color = '#f39c12';
-        }
-    } else if (status) {
-        status.innerHTML = '';
+    let db = JSON.parse(localStorage.getItem('alfaza_cell')) || {};
+    KASIR_LIST.forEach(k => { if (!db[k]) db[k] = { bank:0, cash:0, tarik:0, aks:0, admin:0, tr:[], ts:[], lastBackup: null }; });
+    if (!db.OWNER) db.OWNER = { bank:0, cash:0, tarik:0, aks:0, admin:0, tr:[], ts:[], lastBackup: null };
+    
+    let user = "", viewKasir = null, dataUser = null, role = "";
+    let kategoriAktif = "BANK";
+    let editId = null;
+    let backupInterval = null;
+    let saldoFilter = "all";
+    let penjualanChart = null;
+    let currentChartType = "harian";
+    
+    // ==================== UTILITY ====================
+    function formatRupiah(el) { let v = el.value.replace(/\D/g,''); el.value = v ? new Intl.NumberFormat('id-ID').format(v) : ''; }
+    function toNumber(v) { return parseInt(v.toString().replace(/\D/g,'')) || 0; }
+    function formatAngka(v) { return new Intl.NumberFormat('id-ID').format(v); }
+    function idRandom() { return Date.now() + '-' + Math.random().toString(36).substr(2,6); }
+    function toast(msg, isError = false) { 
+        let t = document.getElementById('toast'); 
+        t.innerText = msg; 
+        t.style.backgroundColor = isError ? '#e74c3c' : '#2b67f6';
+        t.style.opacity = '1'; 
+        setTimeout(() => t.style.opacity = '0', 2000); 
     }
-}
-
-// ==================== BACKUP ====================
-async function backupKasirSekarang() {
-    if (!viewKasir) { toast('Pilih kasir dulu', true); return; }
-    toast('🔄 Backup...');
-    let allData = {};
-    allData[viewKasir] = { transactions: dataUser.tr || [], saldoAdjusts: dataUser.ts || [] };
-    try {
-        await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'backupAll', data: allData })
-        });
-        dataUser.lastBackup = Date.now();
-        localStorage.setItem('alfaza_cell', JSON.stringify(db));
-        updateSyncStatus();
-        toast('✅ Backup berhasil');
-    } catch(e) {
-        toast('❌ Backup gagal', true);
+    
+    function setMode(mode) {
+        document.body.classList.remove('mode-phone', 'mode-tablet', 'mode-pc');
+        document.body.classList.add('mode-' + mode);
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        localStorage.setItem('app_mode', mode);
     }
-}
-
-async function backupAllKasir() {
-    toast('🔄 Backup semua kasir...');
-    let allData = {};
-    for (let kasir of KASIR_LIST) {
-        allData[kasir] = { transactions: db[kasir].tr || [], saldoAdjusts: db[kasir].ts || [] };
+    
+    function loadMode() {
+        let mode = localStorage.getItem('app_mode') || 'phone';
+        setMode(mode);
     }
-    try {
-        await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'backupAll', data: allData })
-        });
-        for (let kasir of KASIR_LIST) { db[kasir].lastBackup = Date.now(); }
-        localStorage.setItem('alfaza_cell', JSON.stringify(db));
-        toast('✅ Backup semua kasir berhasil');
-    } catch(e) {
-        toast('❌ Backup gagal', true);
+    
+    function updateSyncStatus() {
+        let status = document.getElementById('sync-status');
+        if (status && dataUser && dataUser.lastBackup) {
+            let last = new Date(dataUser.lastBackup);
+            let now = new Date();
+            let diff = Math.floor((now - last) / 60000);
+            if (diff < 60) {
+                status.innerHTML = ` ✓ ${diff} mnt lalu`;
+                status.style.color = '#27ae60';
+            } else {
+                status.innerHTML = ` ⚠ ${diff} mnt lalu`;
+                status.style.color = '#f39c12';
+            }
+        } else if (status) { status.innerHTML = ''; }
     }
-}
-
-function startAutoBackup() {
-    if (backupInterval) clearInterval(backupInterval);
-    backupInterval = setInterval(() => {
-        if (viewKasir && role !== 'owner') {
-            backupKasirSekarang();
-        }
-    }, 60 * 60 * 1000);
-}
-
-// ==================== LOGIN ====================
-function login() {
-    let u = document.getElementById('user-select').value;
-    let p = document.getElementById('user-pin').value;
-    if (PIN_KASIR[u] === p) {
-        user = u; role = (u === "OWNER") ? "owner" : "kasir";
-        if (role === "owner") {
-            viewKasir = null; dataUser = db.OWNER;
-            document.getElementById('owner-mode').style.display = 'block';
-            document.getElementById('btn-tambah-saldo').style.display = 'none';
-            document.getElementById('disp-user').innerHTML = user + ' <span class="kasir-badge">OWNER</span>';
-        } else {
-            viewKasir = u; dataUser = db[u];
-            document.getElementById('owner-mode').style.display = 'none';
-            document.getElementById('btn-tambah-saldo').style.display = 'block';
-            document.getElementById('disp-user').innerHTML = user + ' <span class="kasir-badge">KASIR</span>';
-            startAutoBackup();
-        }
-        document.getElementById('login-page').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('disp-login').innerText = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-        let jam = new Date().getHours();
-        document.getElementById('disp-shift').innerText = (jam >= 6 && jam < 15) ? "Pagi" : "Malam";
-        let tgl = new Date().toISOString().split('T')[0];
-        document.getElementById('tgl-awal').value = tgl;
-        document.getElementById('tgl-akhir').value = tgl;
-        document.getElementById('tgl-laporan').value = tgl;
+    
+    // ==================== BACKUP ====================
+    async function backupKasirSekarang() {
+        if (!viewKasir) { toast('Pilih kasir dulu', true); return; }
+        toast('🔄 Backup...');
+        let allData = {};
+        allData[viewKasir] = { transactions: dataUser.tr || [], saldoAdjusts: dataUser.ts || [] };
+        try {
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'backupAll', data: allData }) });
+            dataUser.lastBackup = Date.now();
+            localStorage.setItem('alfaza_cell', JSON.stringify(db));
+            updateSyncStatus();
+            toast('✅ Backup berhasil');
+        } catch(e) { toast('❌ Backup gagal', true); }
+    }
+    
+    async function backupAllKasir() {
+        toast('🔄 Backup semua kasir...');
+        let allData = {};
+        for (let kasir of KASIR_LIST) { allData[kasir] = { transactions: db[kasir].tr || [], saldoAdjusts: db[kasir].ts || [] }; }
+        try {
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'backupAll', data: allData }) });
+            for (let kasir of KASIR_LIST) { db[kasir].lastBackup = Date.now(); }
+            localStorage.setItem('alfaza_cell', JSON.stringify(db));
+            toast('✅ Backup semua kasir berhasil');
+        } catch(e) { toast('❌ Backup gagal', true); }
+    }
+    
+    function startAutoBackup() {
+        if (backupInterval) clearInterval(backupInterval);
+        backupInterval = setInterval(() => { if (viewKasir && role !== 'owner') backupKasirSekarang(); }, 60 * 60 * 1000);
+    }
+    
+    // ==================== LOGIN ====================
+    function login() {
+        let u = document.getElementById('user-select').value;
+        let p = document.getElementById('user-pin').value;
+        if (PIN_KASIR[u] === p) {
+            user = u; role = (u === "OWNER") ? "owner" : "kasir";
+            if (role === "owner") {
+                viewKasir = null; dataUser = db.OWNER;
+                document.getElementById('owner-mode').style.display = 'block';
+                document.getElementById('btn-tambah-saldo').style.display = 'none';
+                document.getElementById('btn-grafik').style.display = 'block';
+                document.getElementById('disp-user').innerHTML = user + ' <span class="kasir-badge">OWNER</span>';
+            } else {
+                viewKasir = u; dataUser = db[u];
+                document.getElementById('owner-mode').style.display = 'none';
+                document.getElementById('btn-tambah-saldo').style.display = 'block';
+                document.getElementById('btn-grafik').style.display = 'none';
+                document.getElementById('disp-user').innerHTML = user + ' <span class="kasir-badge">KASIR</span>';
+                startAutoBackup();
+            }
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('disp-login').innerText = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+            let jam = new Date().getHours();
+            document.getElementById('disp-shift').innerText = (jam >= 6 && jam < 15) ? "Pagi" : "Malam";
+            let tgl = new Date().toISOString().split('T')[0];
+            document.getElementById('tgl-awal').value = tgl;
+            document.getElementById('tgl-akhir').value = tgl;
+            document.getElementById('tgl-laporan').value = tgl;
+            document.getElementById('graf-tgl-awal').value = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
+            document.getElementById('graf-tgl-akhir').value = tgl;
+            refreshTampilan();
+            filterRiwayat();
+            updateSyncStatus();
+            loadMode();
+        } else { alert("PIN SALAH!"); }
+    }
+    
+    function pilihKasir(kasir, el) {
+        document.querySelectorAll('.kasir-option').forEach(opt => opt.classList.remove('active'));
+        el.classList.add('active');
+        viewKasir = kasir;
+        dataUser = db[kasir];
+        document.getElementById('disp-user').innerHTML = kasir + ' <span class="kasir-badge">KASIR</span>';
         refreshTampilan();
         filterRiwayat();
         updateSyncStatus();
-    } else { alert("PIN SALAH!"); }
-}
-
-function pilihKasir(kasir, el) {
-    document.querySelectorAll('.kasir-option').forEach(opt => opt.classList.remove('active'));
-    el.classList.add('active');
-    viewKasir = kasir;
-    dataUser = db[kasir];
-    document.getElementById('disp-user').innerHTML = kasir + ' <span class="kasir-badge">KASIR</span>';
-    refreshTampilan();
-    filterRiwayat();
-    updateSyncStatus();
-}
-
-function refreshTampilan() {
-    if (!dataUser) return;
-    document.getElementById('saldo-bank').innerHTML = "Rp " + formatAngka(dataUser.bank);
-    document.getElementById('saldo-cash').innerHTML = "Rp " + formatAngka(dataUser.cash);
-    document.getElementById('stat-tarik').innerHTML = formatAngka(dataUser.tarik);
-    document.getElementById('stat-aks').innerHTML = formatAngka(dataUser.aks);
-    document.getElementById('stat-admin').innerHTML = formatAngka(dataUser.admin);
-}
-
-setInterval(() => {
-    let d = new Date();
-    document.getElementById('disp-time').innerText = d.toLocaleTimeString('id-ID');
-    document.getElementById('disp-date').innerText = d.toLocaleDateString('id-ID', {day:'numeric', month:'long'});
-}, 1000);
-
-function gantiPage(pg, el) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + pg).classList.add('active');
-    if (el) el.classList.add('active');
-    if (pg === 'history') filterRiwayat();
-    if (pg === 'report') tampilkanLaporan();
-}
-
-function pilihKategori(kat, el) {
-    kategoriAktif = kat;
-    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-}
-
-// ==================== TRANSAKSI ====================
-function simpanTransaksi() {
-    if (role === "owner" || !viewKasir) { alert("Owner tidak bisa transaksi. Pilih kasir dulu."); return; }
-    let nom = toNumber(document.getElementById('input-nominal').value);
-    let adm = toNumber(document.getElementById('input-admin').value);
-    let ket = document.getElementById('input-ket').value;
-    if (!nom) { alert("Masukkan nominal!"); return; }
-    let now = new Date();
-    let tgl = now.toISOString().split('T')[0];
-    let jam = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-    let data = { id: idRandom(), waktu: now.toISOString(), tgl, jam, kat: kategoriAktif, nom, adm, ket };
+    }
     
-    if (kategoriAktif === 'TARIK TUNAI') { dataUser.cash -= nom; dataUser.tarik += nom; }
-    else if (kategoriAktif === 'AKSESORIS') { dataUser.aks += nom; }
-    else { dataUser.bank -= nom; dataUser.cash += nom; }
-    dataUser.admin += adm;
-    dataUser.tr.unshift(data);
+    function refreshTampilan() {
+        if (!dataUser) return;
+        document.getElementById('saldo-bank').innerHTML = "Rp " + formatAngka(dataUser.bank);
+        document.getElementById('saldo-cash').innerHTML = "Rp " + formatAngka(dataUser.cash);
+        document.getElementById('stat-tarik').innerHTML = formatAngka(dataUser.tarik);
+        document.getElementById('stat-aks').innerHTML = formatAngka(dataUser.aks);
+        document.getElementById('stat-admin').innerHTML = formatAngka(dataUser.admin);
+    }
     
-    localStorage.setItem('alfaza_cell', JSON.stringify(db));
-    refreshTampilan();
-    document.getElementById('input-nominal').value = '';
-    document.getElementById('input-admin').value = '';
-    document.getElementById('input-ket').value = '';
-    toast('✅ Transaksi tersimpan');
+    setInterval(() => {
+        let d = new Date();
+        document.getElementById('disp-time').innerText = d.toLocaleTimeString('id-ID');
+        document.getElementById('disp-date').innerText = d.toLocaleDateString('id-ID', {day:'numeric', month:'long'});
+    }, 1000);
     
-    fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'transaksi', kasir: viewKasir, data: data }) });
-}
-
-// ==================== TAMBAH SALDO ====================
-function bukaTambahSaldo() { document.getElementById('modal-saldo').style.display = 'flex'; }
-function tutupModalSaldo() { document.getElementById('modal-saldo').style.display = 'none'; }
-function prosesTambahSaldo() {
-    let jenis = document.getElementById('saldo-jenis').value;
-    let nom = toNumber(document.getElementById('saldo-nominal').value);
-    if (!nom) { alert("Masukkan nominal!"); return; }
-    let now = new Date();
-    let tgl = now.toISOString().split('T')[0];
-    let jam = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-    let data = { id: idRandom(), waktu: now.toISOString(), tgl, jam, jenis, nom, ket: '' };
-    if (jenis === 'Bank') dataUser.bank += nom;
-    else dataUser.cash += nom;
-    dataUser.ts.unshift(data);
-    localStorage.setItem('alfaza_cell', JSON.stringify(db));
-    refreshTampilan();
-    tutupModalSaldo();
-    toast('✅ Saldo ditambahkan');
-    fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saldo', kasir: viewKasir, data: data }) });
-}
-
-// ==================== SALDO REAL ====================
-function bukaSaldoReal() { document.getElementById('modal-saldo-real').style.display = 'flex'; }
-function tutupModalSaldoReal() { document.getElementById('modal-saldo-real').style.display = 'none'; }
-function simpanSaldoReal() {
-    let nom = toNumber(document.getElementById('saldo-real-nominal').value);
-    let ket = document.getElementById('saldo-real-ket').value;
-    if (!nom) { alert("Masukkan nominal!"); return; }
-    let now = new Date();
-    let tgl = now.toISOString().split('T')[0];
-    let jam = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-    let data = { id: idRandom(), waktu: now.toISOString(), tgl, jam, jenis: 'Saldo Real App', nom, ket };
-    dataUser.ts.unshift(data);
-    localStorage.setItem('alfaza_cell', JSON.stringify(db));
-    refreshTampilan();
-    tutupModalSaldoReal();
-    toast('✅ Saldo Real tersimpan');
-    if (document.getElementById('page-report').classList.contains('active')) tampilkanLaporan();
-}
-
-// ==================== RIWAYAT ====================
-function filterKategori(kat, el) {
-    document.querySelectorAll('#filter-transaksi .filter-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    filterRiwayat();
-}
-
-function filterRiwayat() {
-    if (!dataUser) return;
-    let tglAwal = document.getElementById('tgl-awal').value;
-    let tglAkhir = document.getElementById('tgl-akhir').value;
-    let filterKat = document.querySelector('#filter-transaksi .filter-btn.active').innerText;
-    filterKat = (filterKat === 'Semua') ? 'all' : filterKat;
+    function gantiPage(pg, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + pg).classList.add('active');
+        if (el) el.classList.add('active');
+        if (pg === 'history') filterRiwayat();
+        if (pg === 'report') tampilkanLaporan();
+        if (pg === 'grafik' && role === 'owner') refreshGrafik();
+    }
     
-    let transaksi = dataUser.tr.filter(t => t.tgl >= tglAwal && t.tgl <= tglAkhir);
-    transaksi = transaksi.filter(t => filterKat === 'all' || t.kat === filterKat);
-    transaksi.sort((a,b) => (b.waktu || '').localeCompare(a.waktu || ''));
+    function pilihKategori(kat, el) {
+        kategoriAktif = kat;
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
     
-    let html = '';
-    transaksi.forEach((t, i) => {
-        let label = t.kat === 'AKSESORIS' ? 'Aks' : (t.kat === 'TARIK TUNAI' ? 'Tarik' : t.kat);
-        let btnEdit = (role === 'owner') ? `<button class="action-btn-icon edit-btn" onclick="editTransaksi('${t.id}')"><i class="fa-solid fa-pen"></i></button>` : '';
-        let btnHapus = (role === 'owner') ? `<button class="action-btn-icon delete-btn" onclick="hapusTransaksi('${t.id}')"><i class="fa-solid fa-trash"></i></button>` : '';
-        html += `<tr><td style="text-align:center;">${i+1}<td>${t.jam}<td>${label}<td style="text-align:right;">Rp ${formatAngka(t.nom)}<td style="text-align:right;">${t.adm ? formatAngka(t.adm) : '-'}<td>${t.ket || '-'}<td style="text-align:center;">${btnEdit}${btnHapus}`;
-    });
-    if (transaksi.length === 0) html = '<tr><td colspan="7"><div class="empty-state">Tidak ada transaksi</div>';
-    document.getElementById('history-list').innerHTML = html;
-}
-
-// ==================== EDIT HAPUS ====================
-function editTransaksi(id) {
-    let tr = dataUser.tr.find(t => t.id === id);
-    if (!tr) return;
-    editId = id;
-    document.getElementById('edit-nominal').value = formatAngka(tr.nom);
-    document.getElementById('edit-admin').value = formatAngka(tr.adm);
-    document.getElementById('edit-keterangan').value = tr.ket || '';
-    document.getElementById('modal-edit').style.display = 'flex';
-}
-function tutupModalEdit() { document.getElementById('modal-edit').style.display = 'none'; editId = null; }
-function simpanEdit() {
-    let tr = dataUser.tr.find(t => t.id === editId);
-    if (!tr) return;
-    let newNom = toNumber(document.getElementById('edit-nominal').value);
-    let newAdm = toNumber(document.getElementById('edit-admin').value);
-    let newKet = document.getElementById('edit-keterangan').value;
-    if (tr.kat === 'TARIK TUNAI') { dataUser.cash += tr.nom; dataUser.tarik -= tr.nom; }
-    else if (tr.kat === 'AKSESORIS') { dataUser.aks -= tr.nom; }
-    else { dataUser.bank += tr.nom; dataUser.cash -= tr.nom; }
-    dataUser.admin -= tr.adm;
-    if (tr.kat === 'TARIK TUNAI') { dataUser.cash -= newNom; dataUser.tarik += newNom; }
-    else if (tr.kat === 'AKSESORIS') { dataUser.aks += newNom; }
-    else { dataUser.bank -= newNom; dataUser.cash += newNom; }
-    dataUser.admin += newAdm;
-    tr.nom = newNom; tr.adm = newAdm; tr.ket = newKet;
-    localStorage.setItem('alfaza_cell', JSON.stringify(db));
-    refreshTampilan();
-    filterRiwayat();
-    tutupModalEdit();
-    toast('✅ Transaksi diupdate');
-}
-function hapusTransaksi(id) {
-    let tr = dataUser.tr.find(t => t.id === id);
-    if (!tr) return;
-    if (confirm(`Hapus transaksi?\n${tr.jam} - ${tr.kat} - Rp${formatAngka(tr.nom)}`)) {
+    // ==================== TRANSAKSI ====================
+    function simpanTransaksi() {
+        if (role === "owner" || !viewKasir) { alert("Owner tidak bisa transaksi. Pilih kasir dulu."); return; }
+        let nom = toNumber(document.getElementById('input-nominal').value);
+        let adm = toNumber(document.getElementById('input-admin').value);
+        let ket = document.getElementById('input-ket').value;
+        if (!nom) { alert("Masukkan nominal!"); return; }
+        let now = new Date();
+        let tgl = now.toISOString().split('T')[0];
+        let jam = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+        let data = { id: idRandom(), waktu: now.toISOString(), tgl, jam, kat: kategoriAktif, nom, adm, ket };
+        
+        if (kategoriAktif === 'TARIK TUNAI') { dataUser.cash -= nom; dataUser.tarik += nom; }
+        else if (kategoriAktif === 'AKSESORIS') { dataUser.aks += nom; }
+        else { dataUser.bank -= nom; dataUser.cash += nom; }
+        dataUser.admin += adm;
+        dataUser.tr.unshift(data);
+        
+        localStorage.setItem('alfaza_cell', JSON.stringify(db));
+        refreshTampilan();
+        document.getElementById('input-nominal').value = '';
+        document.getElementById('input-admin').value = '';
+        document.getElementById('input-ket').value = '';
+        toast('✅ Transaksi tersimpan');
+        fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'transaksi', kasir: viewKasir, data: data }) });
+    }
+    
+    // ==================== TAMBAH SALDO ====================
+    function bukaTambahSaldo() { document.getElementById('modal-saldo').style.display = 'flex'; }
+    function tutupModalSaldo() { document.getElementById('modal-saldo').style.display = 'none'; }
+    function prosesTambahSaldo() {
+        let jenis = document.getElementById('saldo-jenis').value;
+        let nom = toNumber(document.getElementById('saldo-nominal').value);
+        if (!nom) { alert("Masukkan nominal!"); return; }
+        let now = new Date();
+        let tgl = now.toISOString().split('T')[0];
+        let jam = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+        let data = { id: idRandom(), waktu: now.toISOString(), tgl, jam, jenis, nom, ket: '' };
+        if (jenis === 'Bank') dataUser.bank += nom;
+        else dataUser.cash += nom;
+        dataUser.ts.unshift(data);
+        localStorage.setItem('alfaza_cell', JSON.stringify(db));
+        refreshTampilan();
+        tutupModalSaldo();
+        toast('✅ Saldo ditambahkan');
+        fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saldo', kasir: viewKasir, data: data }) });
+        if (document.getElementById('page-history').classList.contains('active')) filterRiwayat();
+    }
+    
+    // ==================== SALDO REAL ====================
+    function bukaSaldoReal() { document.getElementById('modal-saldo-real').style.display = 'flex'; }
+    function tutupModalSaldoReal() { document.getElementById('modal-saldo-real').style.display = 'none'; }
+    function simpanSaldoReal() {
+        let nom = toNumber(document.getElementById('saldo-real-nominal').value);
+        let ket = document.getElementById('saldo-real-ket').value;
+        if (!nom) { alert("Masukkan nominal!"); return; }
+        let now = new Date();
+        let tgl = now.toISOString().split('T')[0];
+        let jam = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+        let data = { id: idRandom(), waktu: now.toISOString(), tgl, jam, jenis: 'Saldo Real App', nom, ket };
+        dataUser.ts.unshift(data);
+        localStorage.setItem('alfaza_cell', JSON.stringify(db));
+        refreshTampilan();
+        tutupModalSaldoReal();
+        toast('✅ Saldo Real tersimpan');
+        if (document.getElementById('page-history').classList.contains('active')) filterRiwayat();
+        if (document.getElementById('page-report').classList.contains('active')) tampilkanLaporan();
+    }
+    
+    // ==================== FUNGSI FILTER RIWAYAT (PERBAIKAN) ====================
+    function filterKategori(kat, el) {
+        // Update tampilan tombol aktif
+        document.querySelectorAll('#filter-transaksi .filter-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        filterRiwayat();
+    }
+    
+    function filterSaldo(kat, el) {
+        saldoFilter = kat;
+        document.querySelectorAll('#filter-saldo .filter-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        filterRiwayat();
+    }
+    
+    function filterRiwayat() {
+        if (!dataUser) return;
+        let tglAwal = document.getElementById('tgl-awal').value;
+        let tglAkhir = document.getElementById('tgl-akhir').value;
+        
+        // Ambil filter kategori yang aktif
+        let filterKatElement = document.querySelector('#filter-transaksi .filter-btn.active');
+        let filterKatText = filterKatElement ? filterKatElement.innerText : 'Semua';
+        
+        // KONVERSI ke format data (perbaikan utama)
+        let filterKat = 'all';
+        if (filterKatText === 'Bank') filterKat = 'BANK';
+        else if (filterKatText === 'Flip') filterKat = 'FLIP';
+        else if (filterKatText === 'App') filterKat = 'APP PULSA';
+        else if (filterKatText === 'Dana') filterKat = 'DANA';
+        else if (filterKatText === 'Tarik') filterKat = 'TARIK TUNAI';
+        else if (filterKatText === 'Aks') filterKat = 'AKSESORIS';
+        else filterKat = 'all';
+        
+        // Filter transaksi
+        let transaksi = dataUser.tr.filter(t => t.tgl >= tglAwal && t.tgl <= tglAkhir);
+        transaksi = transaksi.filter(t => filterKat === 'all' || t.kat === filterKat);
+        transaksi.sort((a,b) => (b.waktu || '').localeCompare(a.waktu || ''));
+        
+        let html = '';
+        transaksi.forEach((t, i) => {
+            let label = t.kat === 'AKSESORIS' ? 'Aks' : (t.kat === 'TARIK TUNAI' ? 'Tarik' : t.kat);
+            let btnEdit = (role === 'owner') ? `<button class="action-btn-icon edit-btn" onclick="editTransaksi('${t.id}')"><i class="fa-solid fa-pen"></i></button>` : '';
+            let btnHapus = (role === 'owner') ? `<button class="action-btn-icon delete-btn" onclick="hapusTransaksi('${t.id}')"><i class="fa-solid fa-trash"></i></button>` : '';
+            html += ` <tr><td style="text-align:center;">${i+1}</td><td>${t.jam}</td><td>${label}</td><td style="text-align:right;">Rp ${formatAngka(t.nom)}</td><td style="text-align:right;">${t.adm ? formatAngka(t.adm) : '-'}</td><td>${t.ket || '-'}</td><td style="text-align:center;">${btnEdit}${btnHapus}</td></tr>`;
+        });
+        if (transaksi.length === 0) html = '<tr><td colspan="7"><div class="empty-state">Tidak ada transaksi</div></td></tr>';
+        document.getElementById('history-list').innerHTML = html;
+        
+        // Filter tambah saldo
+        let saldoData = dataUser.ts.filter(s => s.tgl >= tglAwal && s.tgl <= tglAkhir);
+        saldoData = saldoData.filter(s => saldoFilter === 'all' || s.jenis === saldoFilter);
+        saldoData.sort((a,b) => (b.waktu || '').localeCompare(a.waktu || ''));
+        let htmlSaldo = '';
+        saldoData.forEach((s, i) => {
+            let jenisIcon = s.jenis === 'Bank' ? '🏦' : (s.jenis === 'Cash' ? '💵' : '📊');
+            htmlSaldo += ` <tr><td style="text-align:center;">${i+1}</td><td>${s.jam}</td><td>${jenisIcon} ${s.jenis}</td><td style="text-align:right;">Rp ${formatAngka(s.nom)}</td><td>${s.ket || '-'}</td></tr>`;
+        });
+        if (saldoData.length === 0) htmlSaldo = '<tr><td colspan="5"><div class="empty-state">Tidak ada riwayat saldo</div></td></tr>';
+        document.getElementById('history-saldo-list').innerHTML = htmlSaldo;
+    }
+    
+    // ==================== EDIT HAPUS ====================
+    function editTransaksi(id) {
+        let tr = dataUser.tr.find(t => t.id === id);
+        if (!tr) return;
+        editId = id;
+        document.getElementById('edit-nominal').value = formatAngka(tr.nom);
+        document.getElementById('edit-admin').value = formatAngka(tr.adm);
+        document.getElementById('edit-keterangan').value = tr.ket || '';
+        document.getElementById('modal-edit').style.display = 'flex';
+    }
+    function tutupModalEdit() { document.getElementById('modal-edit').style.display = 'none'; editId = null; }
+    function simpanEdit() {
+        let tr = dataUser.tr.find(t => t.id === editId);
+        if (!tr) return;
+        let newNom = toNumber(document.getElementById('edit-nominal').value);
+        let newAdm = toNumber(document.getElementById('edit-admin').value);
+        let newKet = document.getElementById('edit-keterangan').value;
         if (tr.kat === 'TARIK TUNAI') { dataUser.cash += tr.nom; dataUser.tarik -= tr.nom; }
         else if (tr.kat === 'AKSESORIS') { dataUser.aks -= tr.nom; }
         else { dataUser.bank += tr.nom; dataUser.cash -= tr.nom; }
         dataUser.admin -= tr.adm;
-        dataUser.tr = dataUser.tr.filter(t => t.id !== id);
+        if (tr.kat === 'TARIK TUNAI') { dataUser.cash -= newNom; dataUser.tarik += newNom; }
+        else if (tr.kat === 'AKSESORIS') { dataUser.aks += newNom; }
+        else { dataUser.bank -= newNom; dataUser.cash += newNom; }
+        dataUser.admin += newAdm;
+        tr.nom = newNom; tr.adm = newAdm; tr.ket = newKet;
         localStorage.setItem('alfaza_cell', JSON.stringify(db));
         refreshTampilan();
         filterRiwayat();
-        toast('✅ Transaksi dihapus');
+        tutupModalEdit();
+        toast('✅ Transaksi diupdate');
     }
-}
-
-// ==================== LAPORAN ====================
-function tampilkanLaporan() {
-    if (!dataUser) return;
-    let tgl = document.getElementById('tgl-laporan').value;
-    let tr = dataUser.tr.filter(x => x.tgl === tgl);
-    let ts = dataUser.ts.filter(x => x.tgl === tgl);
-    let bankMasuk = ts.filter(x => x.jenis === 'Bank').reduce((a,b) => a + b.nom, 0);
-    let sBank = tr.filter(x => x.kat === 'BANK').reduce((a,b) => a + b.nom, 0);
-    let sFlip = tr.filter(x => x.kat === 'FLIP').reduce((a,b) => a + b.nom, 0);
-    let sDana = tr.filter(x => x.kat === 'DANA').reduce((a,b) => a + b.nom, 0);
-    let sApp = tr.filter(x => x.kat === 'APP PULSA').reduce((a,b) => a + b.nom, 0);
-    let sAks = tr.filter(x => x.kat === 'AKSESORIS').reduce((a,b) => a + b.nom, 0);
-    let sTarik = tr.filter(x => x.kat === 'TARIK TUNAI').reduce((a,b) => a + b.nom, 0);
-    let totalPenjualan = sBank + sFlip + sDana + sApp;
-    let totalAdmin = tr.reduce((a,b) => a + b.adm, 0);
-    let totalSaldoReal = ts.filter(x => x.jenis === 'Saldo Real App').reduce((a,b) => a + b.nom, 0);
-    let sisaCash = dataUser.cash + totalAdmin + sAks;
-    let selisih = dataUser.bank - totalSaldoReal;
+    function hapusTransaksi(id) {
+        let tr = dataUser.tr.find(t => t.id === id);
+        if (!tr) return;
+        if (confirm(`Hapus transaksi?\n${tr.jam} - ${tr.kat} - Rp${formatAngka(tr.nom)}`)) {
+            if (tr.kat === 'TARIK TUNAI') { dataUser.cash += tr.nom; dataUser.tarik -= tr.nom; }
+            else if (tr.kat === 'AKSESORIS') { dataUser.aks -= tr.nom; }
+            else { dataUser.bank += tr.nom; dataUser.cash -= tr.nom; }
+            dataUser.admin -= tr.adm;
+            dataUser.tr = dataUser.tr.filter(t => t.id !== id);
+            localStorage.setItem('alfaza_cell', JSON.stringify(db));
+            refreshTampilan();
+            filterRiwayat();
+            toast('✅ Transaksi dihapus');
+        }
+    }
     
-    let html = `<div class="report-card">
-        <h3 style="text-align:center;">LAPORAN HARIAN</h3>
-        <p style="text-align:center;">${tgl} - Kasir: ${viewKasir || user}</p>
-        <div class="report-row"><span>🏦 Saldo Bank Masuk</span><b>Rp ${formatAngka(bankMasuk)}</b></div>
-        <h4>Penjualan:</h4>
-        <div class="report-row"><span>Bank</span><b>Rp ${formatAngka(sBank)}</b></div>
-        <div class="report-row"><span>Flip</span><b>Rp ${formatAngka(sFlip)}</b></div>
-        <div class="report-row"><span>Dana</span><b>Rp ${formatAngka(sDana)}</b></div>
-        <div class="report-row"><span>App Pulsa</span><b>Rp ${formatAngka(sApp)}</b></div>
-        <div class="report-row" style="background:#f0f4ff;"><span>TOTAL PENJUALAN</span><b>Rp ${formatAngka(totalPenjualan)}</b></div>
-        <div class="report-row"><span>💸 Tarik Tunai</span><b>-Rp ${formatAngka(sTarik)}</b></div>
-        <div class="report-row"><span>💰 Sisa Cash Penjualan</span><b>Rp ${formatAngka(dataUser.cash)}</b></div>
-        <div class="report-row"><span>📋 Admin</span><b>Rp ${formatAngka(totalAdmin)}</b></div>
-        <div class="report-row"><span>🎧 Aksesoris</span><b>Rp ${formatAngka(sAks)}</b></div>
-        <div class="report-total-section"><div class="report-total-row"><span>💰 SISA CASH TOTAL</span><span>Rp ${formatAngka(sisaCash)}</span></div></div>
-        <div style="margin-top:15px; padding:10px; background:#f8f9ff; border-radius:12px;">
-            <div><strong>🏦 Saldo Bank Catatan:</strong> Rp ${formatAngka(dataUser.bank)}</div>
-            <div><strong>💰 Total Saldo Real:</strong> Rp ${formatAngka(totalSaldoReal)}</div>
-            <div style="color:${selisih !== 0 ? '#e74c3c' : '#27ae60'}"><strong>⚖️ Selisih:</strong> Rp ${formatAngka(Math.abs(selisih))} ${selisih > 0 ? '(Lebih catatan)' : (selisih < 0 ? '(Kurang catatan)' : '(Sesuai)')}</div>
-        </div>
-        <div class="action-buttons">
-            <button class="action-btn btn-orange" onclick="resetSaldo()"><i class="fa-solid fa-rotate-right"></i> Reset</button>
-            <button class="action-btn btn-green" onclick="shareLaporan()"><i class="fa-brands fa-whatsapp"></i> Share</button>
-            <button class="action-btn btn-blue" onclick="bukaSaldoReal()"><i class="fa-solid fa-pencil"></i> Saldo Real</button>
-            <button class="action-btn btn-purple" onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-        </div>
-    </div>`;
-    document.getElementById('laporan-area').innerHTML = html;
-}
-
-async function shareLaporan() {
-    let tgl = document.getElementById('tgl-laporan').value;
-    let teks = `📱 LAPORAN ALFAZA CELL\n📅 ${tgl}\nKasir: ${viewKasir || user}\nSisa Cash Total: Rp ${formatAngka(document.querySelector('#laporan-area .report-total-section .report-total-row span:last-child').innerText)}\n${new Date().toLocaleString()}`;
-    if (navigator.share) { try { await navigator.share({ text: teks }); return; } catch(e) {} }
-    try { await navigator.clipboard.writeText(teks); toast('📋 Teks disalin'); } catch(e) { alert(teks); }
-}
-
-function exportPDF() {
-    let el = document.querySelector('#laporan-area .report-card');
-    if (!el) return;
-    toast('Membuat PDF...');
-    let btn = el.querySelector('.action-buttons');
-    let oldDisplay = btn ? btn.style.display : null;
-    if (btn) btn.style.display = 'none';
-    html2canvas(el, { scale: 2 }).then(canvas => {
-        if (btn) btn.style.display = oldDisplay || 'flex';
-        let img = canvas.toDataURL('image/png');
-        let { jsPDF } = window.jspdf;
-        let pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        let imgW = 190, imgH = (canvas.height * imgW) / canvas.width;
-        pdf.addImage(img, 'PNG', 10, 10, imgW, imgH);
-        pdf.save(`Laporan_${viewKasir || user}_${new Date().toISOString().split('T')[0]}.pdf`);
-        toast('✅ PDF selesai');
-    }).catch(() => toast('Gagal buat PDF', true));
-}
-
-function resetSaldo() { if(confirm('Reset semua saldo ke 0?')) { dataUser.bank = 0; dataUser.cash = 0; dataUser.tarik = 0; dataUser.aks = 0; dataUser.admin = 0; localStorage.setItem('alfaza_cell', JSON.stringify(db)); refreshTampilan(); toast('Saldo direset'); } }
-
-function logout() {
-    if (confirm('Keluar?')) {
-        if (backupInterval) clearInterval(backupInterval);
-        document.getElementById('login-page').style.display = 'flex';
-        document.getElementById('main-app').style.display = 'none';
-        document.getElementById('user-pin').value = '';
-        user = ""; viewKasir = null; dataUser = null;
+    // ==================== LAPORAN ====================
+    function tampilkanLaporan() {
+        if (!dataUser) return;
+        let tgl = document.getElementById('tgl-laporan').value;
+        let tr = dataUser.tr.filter(x => x.tgl === tgl);
+        let ts = dataUser.ts.filter(x => x.tgl === tgl);
+        let bankMasuk = ts.filter(x => x.jenis === 'Bank').reduce((a,b) => a + b.nom, 0);
+        let sBank = tr.filter(x => x.kat === 'BANK').reduce((a,b) => a + b.nom, 0);
+        let sFlip = tr.filter(x => x.kat === 'FLIP').reduce((a,b) => a + b.nom, 0);
+        let sDana = tr.filter(x => x.kat === 'DANA').reduce((a,b) => a + b.nom, 0);
+        let sApp = tr.filter(x => x.kat === 'APP PULSA').reduce((a,b) => a + b.nom, 0);
+        let sAks = tr.filter(x => x.kat === 'AKSESORIS').reduce((a,b) => a + b.nom, 0);
+        let sTarik = tr.filter(x => x.kat === 'TARIK TUNAI').reduce((a,b) => a + b.nom, 0);
+        let totalPenjualan = sBank + sFlip + sDana + sApp;
+        let totalAdmin = tr.reduce((a,b) => a + b.adm, 0);
+        let totalSaldoReal = ts.filter(x => x.jenis === 'Saldo Real App').reduce((a,b) => a + b.nom, 0);
+        let sisaCash = dataUser.cash + totalAdmin + sAks;
+        let selisih = dataUser.bank - totalSaldoReal;
+        
+        let html = `<div class="report-card">
+            <h3 style="text-align:center;">📋 LAPORAN HARIAN</h3>
+            <p style="text-align:center; font-size:9px;">${tgl} | Kasir: ${viewKasir || user}</p>
+            <div class="report-row"><span>🏦 Saldo Bank Masuk</span><b>Rp ${formatAngka(bankMasuk)}</b></div>
+            <div style="margin:6px 0; font-weight:bold;">📊 Penjualan:</div>
+            <div class="report-row"><span>Bank</span><b>Rp ${formatAngka(sBank)}</b></div>
+            <div class="report-row"><span>Flip</span><b>Rp ${formatAngka(sFlip)}</b></div>
+            <div class="report-row"><span>Dana</span><b>Rp ${formatAngka(sDana)}</b></div>
+            <div class="report-row"><span>App Pulsa</span><b>Rp ${formatAngka(sApp)}</b></div>
+            <div class="report-row" style="background:#eef2ff;"><span>💰 TOTAL PENJUALAN</span><b>Rp ${formatAngka(totalPenjualan)}</b></div>
+            <div class="report-row"><span>💸 Tarik Tunai</span><b style="color:#e74c3c;">-Rp ${formatAngka(sTarik)}</b></div>
+            <div class="report-row"><span>💵 Sisa Cash Penjualan</span><b>Rp ${formatAngka(dataUser.cash)}</b></div>
+            <div class="report-row"><span>📋 Admin</span><b>Rp ${formatAngka(totalAdmin)}</b></div>
+            <div class="report-row"><span>🎧 Aksesoris</span><b>Rp ${formatAngka(sAks)}</b></div>
+            <div class="report-total-section"><div class="report-total-row"><span>💰 SISA CASH TOTAL</span><span>Rp ${formatAngka(sisaCash)}</span></div></div>
+            <div style="margin-top:12px; padding:8px; background:#f8f9ff; border-radius:10px;">
+                <div><span style="font-size:10px;">🏦 Saldo Bank Catatan:</span> <b>Rp ${formatAngka(dataUser.bank)}</b></div>
+                <div><span style="font-size:10px;">📊 Total Saldo Real:</span> <b>Rp ${formatAngka(totalSaldoReal)}</b></div>
+                <div style="color:${selisih !== 0 ? '#e74c3c' : '#27ae60'}; font-size:10px;"><strong>⚖️ Selisih:</strong> Rp ${formatAngka(Math.abs(selisih))} ${selisih > 0 ? '(Lebih catatan)' : (selisih < 0 ? '(Kurang catatan)' : '(Sesuai)')}</div>
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn btn-orange" onclick="resetSaldo()"><i class="fa-solid fa-rotate-right"></i> Reset</button>
+                <button class="action-btn btn-green" onclick="shareLaporan()"><i class="fa-brands fa-whatsapp"></i> Share</button>
+                <button class="action-btn btn-blue" onclick="bukaSaldoReal()"><i class="fa-solid fa-pencil"></i> Saldo Real</button>
+                <button class="action-btn btn-purple" onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            </div>
+        </div>`;
+        document.getElementById('laporan-area').innerHTML = html;
     }
-}
-</script>
+    
+    async function shareLaporan() {
+        let tgl = document.getElementById('tgl-laporan').value;
+        let teks = `📱 LAPORAN ALFAZA CELL\n📅 ${tgl}\nKasir: ${viewKasir || user}\nSisa Cash Total: ${document.querySelector('#laporan-area .report-total-section .report-total-row span:last-child').innerText}\n${new Date().toLocaleString()}`;
+        if (navigator.share) { try { await navigator.share({ text: teks }); return; } catch(e) {} }
+        try { await navigator.clipboard.writeText(teks); toast('📋 Teks disalin'); } catch(e) { alert(teks); }
+    }
+    
+    function exportPDF() {
+        let el = document.querySelector('#laporan-area .report-card');
+        if (!el) return;
+        toast('Membuat PDF...');
+        let btn = el.querySelector('.action-buttons');
+        let oldDisplay = btn ? btn.style.display : null;
+        if (btn) btn.style.display = 'none';
+        html2canvas(el, { scale: 2 }).then(canvas => {
+            if (btn) btn.style.display = oldDisplay || 'flex';
+            let img = canvas.toDataURL('image/png');
+            let { jsPDF } = window.jspdf;
+            let pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            let imgW = 190, imgH = (canvas.height * imgW) / canvas.width;
+            pdf.addImage(img, 'PNG', 10, 10, imgW, imgH);
+            pdf.save(`Laporan_${viewKasir || user}_${new Date().toISOString().split('T')[0]}.pdf`);
+            toast('✅ PDF selesai');
+        }).catch(() => toast('Gagal buat PDF', true));
+    }
+    
+    // ==================== GRAFIK (KHUSUS OWNER) ====================
+    function pilihTipeGrafik(tipe, el) {
+        document.querySelectorAll('.chart-type-btn').forEach(btn => btn.classList.remove('active'));
+        el.classList.add('active');
+        currentChartType = tipe;
+        refreshGrafik();
+    }
+    
+    function refreshGrafik() {
+        if (role !== 'owner') return;
+        let tglAwal = document.getElementById('graf-tgl-awal').value;
+        let tglAkhir = document.getElementById('graf-tgl-akhir').value;
+        if (!tglAwal) tglAwal = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
+        if (!tglAkhir) tglAkhir = new Date().toISOString().split('T')[0];
+        
+        let allTransactions = [];
+        if (viewKasir) {
+            allTransactions = db[viewKasir].tr.filter(t => t.tgl >= tglAwal && t.tgl <= tglAkhir);
+        } else {
+            KASIR_LIST.forEach(kasir => { allTransactions = allTransactions.concat(db[kasir].tr.filter(t => t.tgl >= tglAwal && t.tgl <= tglAkhir)); });
+        }
+        
+        let totalPenjualan = allTransactions.filter(t => t.kat !== 'TARIK TUNAI' && t.kat !== 'AKSESORIS').reduce((sum, t) => sum + t.nom, 0);
+        document.getElementById('grafik-total').innerHTML = `Rp ${formatAngka(totalPenjualan)}`;
+        
+        if (currentChartType === 'harian') {
+            let dailyData = {};
+            for (let d = new Date(tglAwal); d <= new Date(tglAkhir); d.setDate(d.getDate() + 1)) {
+                let dateStr = d.toISOString().split('T')[0];
+                dailyData[dateStr] = 0;
+            }
+            allTransactions.forEach(t => { if (t.kat !== 'TARIK TUNAI' && t.kat !== 'AKSESORIS') dailyData[t.tgl] = (dailyData[t.tgl] || 0) + t.nom; });
+            let labels = Object.keys(dailyData).sort();
+            let data = labels.map(l => dailyData[l]);
+            document.getElementById('chart-title').innerHTML = `📊 Grafik Penjualan Harian (${tglAwal} sd ${tglAkhir})`;
+            if (penjualanChart) penjualanChart.destroy();
+            penjualanChart = new Chart(document.getElementById('penjualanChart'), {
+                type: 'bar', data: { labels: labels, datasets: [{ label: 'Penjualan (Rp)', data: data, backgroundColor: 'rgba(43,103,246,0.7)', borderColor: '#2b67f6', borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: true, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } } }, plugins: { tooltip: { callbacks: { label: ctx => 'Rp ' + ctx.raw.toLocaleString('id-ID') } } } }
+            });
+        } else if (currentChartType === 'kategori') {
+            let kategoriData = { BANK: 0, FLIP: 0, 'APP PULSA': 0, DANA: 0 };
+            allTransactions.forEach(t => { if (kategoriData[t.kat] !== undefined) kategoriData[t.kat] += t.nom; });
+            let labels = Object.keys(kategoriData);
+            let data = labels.map(l => kategoriData[l]);
+            document.getElementById('chart-title').innerHTML = `🥧 Grafik Per Kategori (${tglAwal} sd ${tglAkhir})`;
+            if (penjualanChart) penjualanChart.destroy();
+            penjualanChart = new Chart(document.getElementById('penjualanChart'), {
+                type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: ['#2b67f6', '#a29bfe', '#55efc4', '#74b9ff'] }] },
+                options: { responsive: true, plugins: { tooltip: { callbacks: { label: ctx => ctx.label + ': Rp ' + ctx.raw.toLocaleString('id-ID') } } } }
+            });
+        } else if (currentChartType === 'kasir') {
+            let kasirData = { 'KASIR 01': 0, 'KASIR 02': 0, 'KASIR 03': 0 };
+            KASIR_LIST.forEach(kasir => {
+                let trKasir = db[kasir].tr.filter(t => t.tgl >= tglAwal && t.tgl <= tglAkhir && t.kat !== 'TARIK TUNAI' && t.kat !== 'AKSESORIS');
+                kasirData[kasir] = trKasir.reduce((sum, t) => sum + t.nom, 0);
+            });
+            let labels = Object.keys(kasirData);
+            let data = labels.map(l => kasirData[l]);
+            document.getElementById('chart-title').innerHTML = `👥 Grafik Per Kasir (${tglAwal} sd ${tglAkhir})`;
+            if (penjualanChart) penjualanChart.destroy();
+            penjualanChart = new Chart(document.getElementById('penjualanChart'), {
+                type: 'bar', data: { labels: labels, datasets: [{ label: 'Penjualan (Rp)', data: data, backgroundColor: ['#2b67f6', '#f39c12', '#7cc386'] }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } } }, plugins: { tooltip: { callbacks: { label: ctx => 'Rp ' + ctx.raw.toLocaleString('id-ID') } } } }
+            });
+        }
+    }
+    
+    function resetSaldo() { if(confirm('Reset semua saldo ke 0?')) { dataUser.bank = 0; dataUser.cash = 0; dataUser.tarik = 0; dataUser.aks = 0; dataUser.admin = 0; localStorage.setItem('alfaza_cell', JSON.stringify(db)); refreshTampilan(); toast('Saldo direset'); } }
+    
+    function logout() {
+        if (confirm('Keluar?')) {
+            if (backupInterval) clearInterval(backupInterval);
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('user-pin').value = '';
+            user = ""; viewKasir = null; dataUser = null;
+        }
+    }
+    </script>
 </body>
 </html>

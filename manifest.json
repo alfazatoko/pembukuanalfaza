@@ -2,7 +2,7 @@
   "name": "Alfaza Cell Pro",
   "short_name": "Alfaza",
   "description": "Aplikasi Kasir Alfaza Cell",
-  "start_url": "/splashscreen.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#2b67f6",
   "theme_color": "#2b67f6",
